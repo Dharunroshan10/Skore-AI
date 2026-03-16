@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skore AI – AI Placement Readiness System</title>
+    <meta name="description" content="AI-powered placement readiness platform. Get your career AI-analyzed.">
+    <meta name="author" content="Skore AI">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Skore AI SVG Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23E8655A'/%3E%3Crect x='8' y='8' width='22' height='16' rx='4' fill='white'/%3E%3Cpolygon points='34,8 48,8 48,22 34,16' fill='white' rx='2'/%3E%3Cpolygon points='8,28 22,34 8,42' fill='white'/%3E%3Crect x='26' y='32' width='22' height='16' rx='4' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- html2pdf for Resume Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ========================================== -->
+    <!-- SVG LOGO DEFINITION (Reusable)             -->
+    <!-- ========================================== -->
+    <svg style="display:none;">
+        <defs>
+            <!-- Skore AI Logo: Coral rounded rect with 4 geometric shapes -->
+            <symbol id="skore-logo" viewBox="0 0 64 64">
+                <rect width="64" height="64" rx="16" fill="#E8655A" />
+                <!-- Top-left: rounded rectangle -->
+                <rect x="8" y="8" width="22" height="15" rx="3" fill="white" />
+                <!-- Top-right: arrow/triangle pointing right -->
+                <path d="M34,8 L48,8 C50,8 50,10 50,10 L50,18 C50,20 48,20 48,20 L38,20 Z" fill="white" />
+                <!-- Bottom-left: arrow/triangle pointing left -->
+                <path d="M30,36 L16,36 C14,36 14,38 14,38 L14,46 C14,48 16,48 16,48 L26,48 Z" fill="white" />
+                <!-- Bottom-right: rounded rectangle -->
+                <rect x="34" y="41" width="22" height="15" rx="3" fill="white" />
+            </symbol>
+            <!-- Skore Logo Small -->
+            <symbol id="skore-logo-sm" viewBox="0 0 64 64">
+                <rect width="64" height="64" rx="16" fill="#E8655A" />
+                <rect x="8" y="8" width="22" height="15" rx="3" fill="white" />
+                <path d="M34,8 L48,8 C50,8 50,10 50,10 L50,18 C50,20 48,20 48,20 L38,20 Z" fill="white" />
+                <path d="M30,36 L16,36 C14,36 14,38 14,38 L14,46 C14,48 16,48 16,48 L26,48 Z" fill="white" />
+                <rect x="34" y="41" width="22" height="15" rx="3" fill="white" />
+            </symbol>
+        </defs>
+    </svg>
+
+    <!-- ========================================== -->
+    <!-- FLOATING DECORATIVE ORBS                   -->
+    <!-- ========================================== -->
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <div class="floating-emojis">
+        <span class="fl-emoji fl-1">🎯</span>
+        <span class="fl-emoji fl-2">💼</span>
+        <span class="fl-emoji fl-3">⚡</span>
+        <span class="fl-emoji fl-4">🧠</span>
+        <span class="fl-emoji fl-5">📊</span>
+        <span class="fl-emoji fl-6">🏆</span>
+        <span class="fl-emoji fl-7">💡</span>
+        <span class="fl-emoji fl-8">🔥</span>
+        <span class="fl-emoji fl-9">✨</span>
+        <span class="fl-emoji fl-10">📈</span>
+        <span class="fl-emoji fl-11">🎮</span>
+        <span class="fl-emoji fl-12">⭐</span>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- LOADING SCREEN                             -->
+    <!-- ========================================== -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader-content">
+            <div class="loader-logo-wrap">
+                <svg width="72" height="72">
+                    <use href="#skore-logo" />
+                </svg>
+            </div>
+            <h2 class="loader-brand">Skore<span>AI</span></h2>
+            <div class="loader-bar-track">
+                <div class="loader-bar-fill"></div>
+            </div>
+            <p class="loader-text">Initializing AI Systems...</p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- NAVIGATION                                 -->
+    <!-- ========================================== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <!-- Brand with SVG Logo -->
+            <a href="#" class="nav-brand" onclick="navigateTo('home'); return false;">
+                <svg width="34" height="34" class="nav-logo-svg">
+                    <use href="#skore-logo-sm" />
+                </svg>
+                <span class="brand-name">Skore</span>
+                <span class="brand-ai-badge">AI</span>
+            </a>
+
+            <!-- Nav Pills -->
+            <div class="nav-pills" id="navPills">
+                <div class="nav-pill-bg" id="navPillBg"></div>
+                <a href="#" class="nav-pill active" data-page="home" onclick="navigateTo('home')">
+                    <span class="pill-icon">🏠</span><span class="pill-text">Home</span>
+                </a>
+                <a href="#" class="nav-pill" data-page="dashboard" onclick="navigateTo('dashboard')">
+                    <span class="pill-icon">📊</span><span class="pill-text">Dashboard</span>
+                </a>
+                <a href="#" class="nav-pill" data-page="practice" onclick="navigateTo('practice')">
+                    <span class="pill-icon">🎮</span><span class="pill-text">Arena</span>
+                </a>
+                <a href="#" class="nav-pill" data-page="resume-builder" onclick="navigateTo('resume-builder')">
+                    <span class="pill-icon">📄</span><span class="pill-text">Resume</span>
+                </a>
+                <a href="#" class="nav-pill" data-page="portfolio" onclick="navigateTo('portfolio')">
+                    <span class="pill-icon">🌐</span><span class="pill-text">Portfolio</span>
+                </a>
+            </div>
+
+            <!-- Nav Actions -->
+            <div class="nav-actions">
+                <div class="nav-chip" title="Streak" id="navStreakChip" style="display:none;">
+                    <span class="chip-emoji">🔥</span>
+                    <span class="chip-value" id="navStreak">0</span>
+                </div>
+                <div class="nav-chip" title="XP" id="navXPChip" style="display:none;">
+                    <span class="chip-emoji">⚡</span>
+                    <span class="chip-value" id="navXP">0</span>
+                </div>
+                <!-- Logged Out State -->
+                <button class="btn-ios-primary" id="navLoginBtn" onclick="openAuthModal()" style="padding: 8px 16px; height: auto; border-radius: 99px; font-size: 13px;">Login</button>
+                <!-- Logged In State (Hidden initially) -->
+                <button class="nav-avatar-btn" id="navProfileBtn" onclick="navigateTo('profile')" style="display:none;">
+                    <span>👤</span>
+                </button>
+                <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileMenu()">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-inner">
+            <a href="#" class="mm-link" onclick="navigateTo('home');toggleMobileMenu()">🏠 Home</a>
+            <a href="#" class="mm-link" onclick="navigateTo('dashboard');toggleMobileMenu()">📊 Dashboard</a>
+            <a href="#" class="mm-link" onclick="navigateTo('practice');toggleMobileMenu()">🎮 Practice Arena</a>
+            <a href="#" class="mm-link" onclick="navigateTo('resume-builder');toggleMobileMenu()">📄 Resume Builder</a>
+            <a href="#" class="mm-link" onclick="navigateTo('portfolio');toggleMobileMenu()">🌐 Portfolio</a>
+            <a href="#" class="mm-link" onclick="navigateTo('readiness');toggleMobileMenu()">🎯 Readiness Score</a>
+            <div class="mm-divider"></div>
+            <a href="#" class="mm-link mm-small" id="mmLoginBtn" onclick="openAuthModal();toggleMobileMenu()">Login / Sign up</a>
+            <a href="#" class="mm-link mm-small" onclick="navigateTo('about');toggleMobileMenu()">About</a>
+            <a href="#" class="mm-link mm-small" onclick="navigateTo('contact');toggleMobileMenu()">Contact</a>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- AUTHENTICATION MODAL                       -->
+    <!-- ========================================== -->
+    <div class="auth-modal-overlay" id="authModalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+        <div class="ios-card auth-modal" style="width:100%; max-width:400px; padding:32px; position:relative;">
+            <button onclick="closeAuthModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--text-secondary);">✕</button>
+            <div style="text-align:center; margin-bottom:24px;">
+                <svg width="48" height="48" style="margin-bottom:12px;"><use href="#skore-logo"/></svg>
+                <h2 style="font-size:24px; font-weight:900;" id="authModalTitle">Welcome Back</h2>
+                <p style="color:var(--text-secondary); font-size:14px;" id="authModalDesc">Login to save your AI career progress.</p>
+            </div>
+            
+            <div class="ios-form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail" class="ios-input" placeholder="you@example.com">
+            </div>
+            <div class="ios-form-group" style="margin-top:16px;">
+                <label>Password</label>
+                <input type="password" id="authPassword" class="ios-input" placeholder="••••••••">
+            </div>
+            
+            <button class="btn-ios-primary" id="authSubmitBtn" onclick="handleAuthSubmit()" style="width:100%; margin-top:24px; padding:14px; font-size:16px;">Login</button>
+            
+            <div style="display:flex; align-items:center; margin:20px 0 16px; gap:12px;">
+                <div style="flex:1; height:1px; background:var(--border-light);"></div>
+                <span style="font-size:12px; color:var(--text-secondary); font-weight:600;">or</span>
+                <div style="flex:1; height:1px; background:var(--border-light);"></div>
+            </div>
+
+            <button onclick="handleGoogleLogin()" style="width:100%; padding:12px; font-size:14px; font-weight:600; border-radius:12px; border:1.5px solid var(--border-light); background:white; color:#333; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:all 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='white'">
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                Continue with Google
+            </button>
+
+            <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--text-secondary);">
+                <span id="authToggleText">Don't have an account?</span>
+                <a href="#" id="authToggleLink" onclick="toggleAuthMode(); return false;" style="color:var(--coral-600); font-weight:700; text-decoration:none; margin-left:4px;">Sign up</a>
+            </div>
+            <div id="authErrorMsg" style="color:var(--danger); font-size:12px; margin-top:12px; text-align:center; display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- BACK BUTTON (shown on inner pages)         -->
+    <!-- ========================================== -->
+    <button class="back-btn" id="globalBackBtn" onclick="goBack()" style="display:none;">
+        <span class="back-arrow">←</span>
+        <span class="back-text">Back</span>
+    </button>
+
+    <!-- ========================================== -->
+    <!-- AI SUGGESTION FAB + PANEL                  -->
+    <!-- ========================================== -->
+    <button class="ai-fab" id="aiFab" onclick="toggleAISuggestion()">
+        <span class="ai-fab-icon">🧠</span>
+        <span class="ai-fab-text">AI Suggest</span>
+    </button>
+
+    <div class="ai-suggestion-panel" id="aiSuggestionPanel">
+        <div class="ai-panel-header">
+            <span>🧠 AI Suggestions</span>
+            <button onclick="toggleAISuggestion()">✕</button>
+        </div>
+        <div class="ai-panel-body" id="aiPanelBody">
+            <div class="ai-panel-loading">
+                <div class="ai-typing-indicator"><span></span><span></span><span></span></div>
+                <p>AI is thinking...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║            PAGE: HOME                   ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page active" id="page-home">
+
+        <!-- HERO -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-layout">
+                    <div class="hero-left">
+                        <div class="hero-badge-row">
+                            <div class="hero-live-badge">
+                                <span class="live-dot"></span>
+                                <span>AI-Powered Career Intelligence</span>
+                            </div>
+                            <div class="hero-version-badge">v2.0</div>
+                        </div>
+                        <h1 class="hero-title">
+                            Your Career,
+                            <br>
+                            <span class="hero-accent">AI Perfected.</span>
+                        </h1>
+                        <p class="hero-desc">
+                            Upload your resume, select dream roles, and get instant AI-powered readiness scores,
+                            personalized roadmaps, ATS optimization, resume builder, and gamified skill building.
+                        </p>
+                        <div class="hero-cta-row">
+                            <button class="btn-hero-primary" onclick="navigateTo('readiness')">
+                                <span class="btn-icon">🎯</span>
+                                <span>Get Your Score</span>
+                                <span class="btn-arrow-right">→</span>
+                            </button>
+                            <button class="btn-hero-secondary" onclick="navigateTo('practice')">
+                                <span class="btn-icon">🎮</span>
+                                <span>Practice Arena</span>
+                            </button>
+                        </div>
+                        <div class="hero-mini-stats">
+                            <div class="hms-item">
+                                <span class="hms-num" data-count="15847">0</span>
+                                <span class="hms-label">Students Analyzed</span>
+                            </div>
+                            <div class="hms-divider"></div>
+                            <div class="hms-item">
+                                <span class="hms-num" data-count="94">0</span><span class="hms-suffix">%</span>
+                                <span class="hms-label">Placement Rate</span>
+                            </div>
+                            <div class="hms-divider"></div>
+                            <div class="hms-item">
+                                <span class="hms-num" data-count="300">0</span><span class="hms-suffix">+</span>
+                                <span class="hms-label">Companies Mapped</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hero Right: Logo Illustration -->
+                    <div class="hero-right">
+                        <div class="hero-illustration">
+                            <!-- Large Skore Logo as central illustration -->
+                            <div class="hero-logo-card">
+                                <svg width="120" height="120" class="hero-logo-svg">
+                                    <use href="#skore-logo" />
+                                </svg>
+                                <div class="hero-logo-label">
+                                    <span class="hll-title">Skore AI</span>
+                                    <span class="hll-sub">Placement Intelligence</span>
+                                </div>
+                            </div>
+                            <!-- Floating mini cards around -->
+                            <div class="hero-float hero-float-1">
+                                <div class="hf-card"><span class="hf-icon">📊</span>
+                                    <div class="hf-info"><span class="hf-value">92%</span><span class="hf-label">Skill
+                                            Match</span></div>
+                                </div>
+                            </div>
+                            <div class="hero-float hero-float-2">
+                                <div class="hf-card"><span class="hf-icon">🔥</span>
+                                    <div class="hf-info"><span class="hf-value">14</span><span class="hf-label">Day
+                                            Streak</span></div>
+                                </div>
+                            </div>
+                            <div class="hero-float hero-float-3">
+                                <div class="hf-card"><span class="hf-icon">⚡</span>
+                                    <div class="hf-info"><span class="hf-value">2,450</span><span class="hf-label">XP
+                                            Earned</span></div>
+                                </div>
+                            </div>
+                            <div class="hero-float hero-float-4">
+                                <div class="hf-card"><span class="hf-icon">🎯</span>
+                                    <div class="hf-info"><span class="hf-value">4</span><span class="hf-label">Dream
+                                            Roles</span></div>
+                                </div>
+                            </div>
+                            <!-- Decorative circles -->
+                            <div class="hero-deco-circle hdc-1"></div>
+                            <div class="hero-deco-circle hdc-2"></div>
+                            <div class="hero-deco-circle hdc-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRUSTED BY -->
+        <section class="trusted-bar">
+            <div class="container">
+                <span class="trusted-label">Trusted by students from</span>
+                <div class="trusted-scroll">
+                    <span class="trusted-name">🏛 IIT Delhi</span>
+                    <span class="trusted-name">🏛 NIT Trichy</span>
+                    <span class="trusted-name">🏛 BITS Pilani</span>
+                    <span class="trusted-name">🏛 VIT Vellore</span>
+                    <span class="trusted-name">🏛 SRM Chennai</span>
+                    <span class="trusted-name">🏛 Anna University</span>
+                    <span class="trusted-name">🏛 PSG Tech</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOOLS GRID -->
+        <section class="tools-section" id="toolsSection">
+            <div class="container">
+                <div class="section-header-ios">
+                    <div class="shi-left">
+                        <span class="shi-dot"></span>
+                        <h2>AI Tools Suite</h2>
+                    </div>
+                    <p>Everything to land your dream role — powered by AI.</p>
+                </div>
+                <div class="tools-grid">
+                    <!-- PRIMARY CARD -->
+                    <div class="ios-card tool-hero-card" onclick="navigateTo('readiness')">
+                        <div class="thc-glow"></div>
+                        <div class="thc-badge">🔥 Most Popular</div>
+                        <div class="thc-content">
+                            <div class="thc-icon-circle">
+                                <svg width="36" height="36">
+                                    <use href="#skore-logo-sm" />
+                                </svg>
+                            </div>
+                            <div class="thc-info">
+                                <h3>Full Placement Readiness Score</h3>
+                                <p>Complete AI analysis — resume, skills, role fit, placement probability.</p>
+                                <div class="thc-chips">
+                                    <span>📄 Resume</span><span>🧠 AI Score</span><span>📊 Roadmap</span><span>🎯 Role
+                                        Fit</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="thc-action"><span>Start Analysis</span><span class="arrow-r">→</span></div>
+                    </div>
+
+                    <div class="ios-card tool-card" onclick="navigateTo('resume-readiness')">
+                        <div class="tc-icon">📄</div>
+                        <h4 class="tc-title">ATS Score Checker</h4>
+                        <p class="tc-desc">AI-powered ATS compatibility analysis.</p>
+                        <div class="tc-action">Check Now <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card" onclick="navigateTo('resume-builder')">
+                        <div class="tc-icon">✍️</div>
+                        <h4 class="tc-title">AI Resume Builder</h4>
+                        <p class="tc-desc">ATS-optimized resumes. Download PDF.</p>
+                        <div class="tc-action">Build Resume <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card" onclick="navigateTo('portfolio')">
+                        <div class="tc-icon">🌐</div>
+                        <h4 class="tc-title">Portfolio Builder</h4>
+                        <p class="tc-desc">Create stunning developer portfolios.</p>
+                        <div class="tc-action">Create <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card" onclick="showToolToast('Roadmap Generator')">
+                        <div class="tc-icon">🗺️</div>
+                        <h4 class="tc-title">Roadmap Generator</h4>
+                        <p class="tc-desc">AI level-based learning paths.</p>
+                        <div class="tc-action">Generate <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card" onclick="navigateTo('practice')">
+                        <span class="tc-new-badge">New</span>
+                        <div class="tc-icon">🎮</div>
+                        <h4 class="tc-title">Practice Arena</h4>
+                        <p class="tc-desc">Gamified challenges, XP & levels.</p>
+                        <div class="tc-action">Enter Arena <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card" onclick="showToolToast('Interview Simulator')">
+                        <div class="tc-icon">🎙️</div>
+                        <h4 class="tc-title">Interview Simulator</h4>
+                        <p class="tc-desc">AI mock interviews with feedback.</p>
+                        <div class="tc-action">Simulate <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card" onclick="showToolToast('Communication Trainer')">
+                        <div class="tc-icon">🗣️</div>
+                        <h4 class="tc-title">Communication Trainer</h4>
+                        <p class="tc-desc">Improve verbal & written skills.</p>
+                        <div class="tc-action">Train <span>→</span></div>
+                    </div>
+                    <div class="ios-card tool-card tool-card-ai" onclick="toggleAISuggestion()">
+                        <div class="tc-icon">🧠</div>
+                        <h4 class="tc-title">AI Career Advisor</h4>
+                        <p class="tc-desc">Personalized AI suggestions.</p>
+                        <div class="tc-action">Get Advice <span>→</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ATS HOME -->
+        <section class="ats-home-section">
+            <div class="container">
+                <div class="section-header-ios">
+                    <div class="shi-left"><span class="shi-dot"></span>
+                        <h2>Is Your Resume ATS-Ready?</h2>
+                    </div>
+                    <p>Most resumes get rejected before a human sees them.</p>
+                </div>
+                <div class="ats-layout">
+                    <div class="ios-card ats-upload-card">
+                        <div class="ats-drop" id="atsHomeDrop">
+                            <span class="ats-drop-emoji">📄</span>
+                            <h3>Drop your resume here</h3>
+                            <p>PDF, DOC or paste text</p>
+                            <input type="file" id="atsHomeFile" accept=".pdf,.doc,.docx,.txt" hidden>
+                            <button class="btn-ios-outline"
+                                onclick="document.getElementById('atsHomeFile').click()">Browse</button>
+                            <div class="ats-divider"><span>or</span></div>
+                            <textarea class="ios-textarea" id="atsHomePaste"
+                                placeholder="Paste resume text..."></textarea>
+                            <button class="btn-ios-primary" onclick="analyzeATSHome()">🧠 Analyze with AI</button>
+                        </div>
+                    </div>
+                    <div class="ios-card ats-result-card" id="atsHomeResult" style="display:none;">
+                        <div id="atsHomeResultInner"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="how-section">
+            <div class="container">
+                <div class="section-header-ios center">
+                    <h2>How Skore AI Works</h2>
+                    <p>Three steps to placement ready.</p>
+                </div>
+                <div class="how-cards">
+                    <div class="ios-card how-card">
+                        <div class="how-num">01</div>
+                        <div class="how-emoji">📄</div>
+                        <h3>Upload Resume</h3>
+                        <p>AI extracts skills, projects, experience automatically.</p>
+                    </div>
+                    <div class="how-connector">
+                        <div class="hc-line"></div>
+                        <div class="hc-dot"></div>
+                    </div>
+                    <div class="ios-card how-card">
+                        <div class="how-num">02</div>
+                        <div class="how-emoji">🎯</div>
+                        <h3>Select Dream Roles</h3>
+                        <p>Choose up to 4. AI maps skills against requirements.</p>
+                    </div>
+                    <div class="how-connector">
+                        <div class="hc-line"></div>
+                        <div class="hc-dot"></div>
+                    </div>
+                    <div class="ios-card how-card">
+                        <div class="how-num">03</div>
+                        <div class="how-emoji">📊</div>
+                        <h3>Get AI Analysis</h3>
+                        <p>Scores, gap analysis, roadmaps, and actions instantly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header-ios center">
+                    <h2>Why Students Love Skore AI</h2>
+                    <p>Built for the AI era.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="ios-card feature-card"><span class="fc-emoji">🤖</span>
+                        <h4>AI-Era Ready</h4>
+                        <p>Prompt engineering, LLM skills, AI tool proficiency in assessments.</p>
+                    </div>
+                    <div class="ios-card feature-card"><span class="fc-emoji">📊</span>
+                        <h4>7-Metric Scoring</h4>
+                        <p>Resume, Skills, Communication, Role Fit, Projects, Consistency.</p>
+                    </div>
+                    <div class="ios-card feature-card"><span class="fc-emoji">🎮</span>
+                        <h4>Gamified Practice</h4>
+                        <p>XP, streaks, levels, daily challenges.</p>
+                    </div>
+                    <div class="ios-card feature-card"><span class="fc-emoji">📄</span>
+                        <h4>Resume Builder</h4>
+                        <p>ATS templates + company-specific premium formats.</p>
+                    </div>
+                    <div class="ios-card feature-card"><span class="fc-emoji">🗺️</span>
+                        <h4>AI Roadmaps</h4>
+                        <p>6-level paths with tasks, resources, time estimates.</p>
+                    </div>
+                    <div class="ios-card feature-card"><span class="fc-emoji">📥</span>
+                        <h4>Export Reports</h4>
+                        <p>Download readiness report as professional PDF.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS -->
+        <section class="testimonials-section">
+            <div class="container">
+                <div class="section-header-ios center">
+                    <h2>Success Stories</h2>
+                </div>
+                <div class="testimonial-row">
+                    <div class="ios-card testimonial-card">
+                        <div class="tc-stars">⭐⭐⭐⭐⭐</div>
+                        <p class="tc-quote">"Skore AI identified resume gaps I missed. Got placed in 3 months!"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">AK</div>
+                            <div><strong>Arjun K.</strong><span>Software Engineer</span></div>
+                        </div>
+                    </div>
+                    <div class="ios-card testimonial-card">
+                        <div class="tc-stars">⭐⭐⭐⭐⭐</div>
+                        <p class="tc-quote">"Practice Arena is addictive! Score went from 45 to 89 in 6 weeks."</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">PS</div>
+                            <div><strong>Priya S.</strong><span>Data Scientist</span></div>
+                        </div>
+                    </div>
+                    <div class="ios-card testimonial-card">
+                        <div class="tc-stars">⭐⭐⭐⭐⭐</div>
+                        <p class="tc-quote">"The AI resume builder and roadmap are game changers."</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">RV</div>
+                            <div><strong>Rahul V.</strong><span>Full Stack Developer</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-card-ios">
+                    <div class="cta-emojis"><span class="cta-e ce1">🎯</span><span class="cta-e ce2">⚡</span><span
+                            class="cta-e ce3">🏆</span><span class="cta-e ce4">🚀</span></div>
+                    <h2>Ready to Score Your Career?</h2>
+                    <p>Join thousands who used AI to land dream placements.</p>
+                    <button class="btn-hero-primary" onclick="navigateTo('readiness')"><span>Get Your Score</span><span
+                            class="btn-arrow-right">→</span></button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║    PAGE: RESUME BUILDER                     ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-resume-builder">
+        <div class="rb-container">
+            <!-- Left Panel: Settings & Inputs -->
+            <div class="rb-sidebar">
+                <div class="rb-header">
+                    <h2>AI Resume Builder</h2>
+                    <p>Build, preview, and download your ATS-friendly resume.</p>
+                </div>
+
+                <div class="rb-controls ios-card">
+                    <div class="ios-form-group">
+                        <label>Template</label>
+                        <select id="rbTemplate" class="ios-input" onchange="setResumeTemplate(this)">
+                            <option value="modern">Modern (Dark Sidebar)</option>
+                            <option value="minimal">Minimal (Clean Text)</option>
+                            <option value="creative">Creative (Split Flow)</option>
+                        </select>
+                    </div>
+
+                    <div class="ios-form-group" style="margin-top:12px;">
+                        <label>Accent Color</label>
+                        <div class="rb-colors">
+                            <div class="rb-color active" style="background:#E8655A;" onclick="setResumeColor(this, '#E8655A')"></div>
+                            <div class="rb-color" style="background:#2563eb;" onclick="setResumeColor(this, '#2563eb')"></div>
+                            <div class="rb-color" style="background:#059669;" onclick="setResumeColor(this, '#059669')"></div>
+                            <div class="rb-color" style="background:#d97706;" onclick="setResumeColor(this, '#d97706')"></div>
+                            <div class="rb-color" style="background:#4f46e5;" onclick="setResumeColor(this, '#4f46e5')"></div>
+                            <div class="rb-color" style="background:#111827;" onclick="setResumeColor(this, '#111827')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Sections -->
+                <div class="rb-accordion-group">
+                    <!-- Personal Info -->
+                    <div class="rb-accordion open">
+                        <div class="rb-accordion-header" onclick="toggleAccordion(this)">
+                            <span>👤 Personal Info</span>
+                            <span class="rb-chevron">▼</span>
+                        </div>
+                        <div class="rb-accordion-body">
+                            <div class="ios-form-row">
+                                <div class="ios-form-group">
+                                    <label>First Name</label>
+                                    <input type="text" id="rbName" class="ios-input" placeholder="John Doe" oninput="updateResumePreview()">
+                                </div>
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Job Title</label>
+                                <input type="text" id="rbTitle" class="ios-input" placeholder="Software Engineer" oninput="updateResumePreview()">
+                            </div>
+                            <div class="ios-form-row">
+                                <div class="ios-form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="rbEmail" class="ios-input" placeholder="john@example.com" oninput="updateResumePreview()">
+                                </div>
+                                <div class="ios-form-group">
+                                    <label>Phone</label>
+                                    <input type="text" id="rbPhone" class="ios-input" placeholder="+1 234 567 890" oninput="updateResumePreview()">
+                                </div>
+                            </div>
+                            <div class="ios-form-row">
+                                <div class="ios-form-group">
+                                    <label>Location</label>
+                                    <input type="text" id="rbLocation" class="ios-input" placeholder="New York, NY" oninput="updateResumePreview()">
+                                </div>
+                                <div class="ios-form-group">
+                                    <label>LinkedIn / Website</label>
+                                    <input type="text" id="rbWebsite" class="ios-input" placeholder="linkedin.com/in/johndoe" oninput="updateResumePreview()">
+                                </div>
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Profile Photo</label>
+                                <div class="rb-photo-upload">
+                                    <input type="file" id="rbPhotoInput" accept="image/*" hidden onchange="handleResumePhoto(this)">
+                                    <button class="btn-ios-outline" onclick="document.getElementById('rbPhotoInput').click()" style="width:100%">Upload Photo</button>
+                                    <img id="rbPhotoPreview" src="" alt="Preview" style="display:none; width:50px; height:50px; border-radius:50%; object-fit:cover; margin-top:10px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="rb-accordion open">
+                        <div class="rb-accordion-header" onclick="toggleAccordion(this)">
+                            <span>📝 Summary</span>
+                            <span class="rb-chevron">▼</span>
+                        </div>
+                        <div class="rb-accordion-body">
+                            <div class="ios-form-group">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <label>Professional Summary</label>
+                                    <button class="rb-ai-btn" onclick="aiEnhanceField(this, 'summary')" style="border:none;background:none;">🧠 AI Enhance</button>
+                                </div>
+                                <textarea id="rbSummary" class="ios-textarea" rows="4" placeholder="Dedicated software engineer with 3+ years of experience..." oninput="updateResumePreview()"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Experience -->
+                    <div class="rb-accordion open">
+                        <div class="rb-accordion-header" onclick="toggleAccordion(this)">
+                            <span>💼 Experience</span>
+                            <span class="rb-chevron">▼</span>
+                        </div>
+                        <div class="rb-accordion-body">
+                            <div id="rb-experience-list"></div>
+                            <button class="btn-ios-outline" style="width:100%; margin-top:10px;" onclick="addResumeItem('experience', 'Experience')">+ Add Experience</button>
+                        </div>
+                    </div>
+
+                    <!-- Education -->
+                    <div class="rb-accordion">
+                        <div class="rb-accordion-header" onclick="toggleAccordion(this)">
+                            <span>🎓 Education</span>
+                            <span class="rb-chevron">▼</span>
+                        </div>
+                        <div class="rb-accordion-body">
+                            <div id="rb-education-list"></div>
+                            <button class="btn-ios-outline" style="width:100%; margin-top:10px;" onclick="addResumeItem('education', 'Education')">+ Add Education</button>
+                        </div>
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="rb-accordion">
+                        <div class="rb-accordion-header" onclick="toggleAccordion(this)">
+                            <span>💡 Skills</span>
+                            <span class="rb-chevron">▼</span>
+                        </div>
+                        <div class="rb-accordion-body">
+                            <div class="ios-form-group">
+                                <label>Comma-separated skills</label>
+                                <textarea id="rbSkills" class="ios-textarea" rows="3" placeholder="JavaScript, React, Node.js, SQL, Machine Learning" oninput="updateResumePreview()"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Live Preview -->
+            <div class="rb-preview-panel">
+                <div class="rb-preview-toolbar">
+                    <span style="font-size:14px; font-weight:600; color:var(--text-secondary);">Live Preview</span>
+                    <button class="btn-ios-primary" onclick="downloadResumePDF()">
+                        <span style="margin-right:6px;">📥</span> Download PDF
+                    </button>
+                </div>
+                
+                <div class="rb-preview-wrapper" id="resumePreviewWrapper">
+                    <div class="resume-sheet template-modern" id="resumeDynamicSheet" style="--resume-accent: #E8655A;">
+                        <!-- JS injected content goes here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║    PAGE: PLACEMENT READINESS WIZARD     ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-readiness">
+        <section class="wizard-section">
+            <div class="container container-md">
+                <div class="wizard-progress-bar-wrap">
+                    <div class="wizard-pb-track">
+                        <div class="wizard-pb-fill" id="wizardFill" style="width:20%"></div>
+                    </div>
+                    <div class="wizard-dots-row">
+                        <div class="wiz-dot active" data-step="1"><span>1</span><small>Info</small></div>
+                        <div class="wiz-dot" data-step="2"><span>2</span><small>Resume</small></div>
+                        <div class="wiz-dot" data-step="3"><span>3</span><small>Roles</small></div>
+                        <div class="wiz-dot" data-step="4"><span>4</span><small>Confidence</small></div>
+                        <div class="wiz-dot" data-step="5"><span>5</span><small>Questions</small></div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Personal -->
+                <div class="wiz-step active" id="wizStep1">
+                    <div class="wiz-step-head"><span class="wiz-emoji">👤</span>
+                        <h2>Personal Information</h2>
+                        <p>Let's personalize your AI analysis.</p>
+                    </div>
+                    <div class="wiz-form">
+                        <div class="ios-form-group"><label>Full Name</label><input type="text" id="wName"
+                                placeholder="Your full name" class="ios-input"></div>
+                        <div class="ios-form-row">
+                            <div class="ios-form-group"><label>Degree</label><select id="wDegree" class="ios-input">
+                                    <option value="">Select</option>
+                                    <option>B.Tech</option>
+                                    <option>B.E.</option>
+                                    <option>BCA</option>
+                                    <option>MCA</option>
+                                    <option>M.Tech</option>
+                                    <option>B.Sc CS</option>
+                                    <option>BBA</option>
+                                    <option>MBA</option>
+                                    <option>Other</option>
+                                </select></div>
+                            <div class="ios-form-group"><label>College Tier</label><select id="wTier" class="ios-input">
+                                    <option value="">Select</option>
+                                    <option value="Tier 1">Tier 1 (IIT/NIT/BITS)</option>
+                                    <option value="Tier 2">Tier 2 (VIT/SRM)</option>
+                                    <option value="Tier 3">Tier 3 (State Univ)</option>
+                                    <option value="Tier 4">Tier 4 (Other)</option>
+                                </select></div>
+                        </div>
+                        <div class="ios-form-row">
+                            <div class="ios-form-group"><label>CGPA</label><input type="number" id="wCGPA"
+                                    placeholder="8.5" min="0" max="10" step="0.1" class="ios-input"></div>
+                            <div class="ios-form-group"><label>Graduation Year</label><select id="wYear"
+                                    class="ios-input">
+                                    <option value="">Select</option>
+                                    <option>2024</option>
+                                    <option>2025</option>
+                                    <option>2026</option>
+                                    <option>2027</option>
+                                    <option>2028</option>
+                                </select></div>
+                        </div>
+                    </div>
+                    <div class="wiz-nav">
+                        <div></div><button class="btn-ios-primary" onclick="wizNext(1)">Continue →</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Resume -->
+                <div class="wiz-step" id="wizStep2">
+                    <div class="wiz-step-head"><span class="wiz-emoji">📄</span>
+                        <h2>Upload Your Resume</h2>
+                        <p>AI extracts skills, projects, experience & more.</p>
+                    </div>
+                    <div class="wiz-form">
+                        <div class="ios-card resume-drop-zone" id="resumeDropZone">
+                            <span class="rdz-icon">📁</span>
+                            <h3>Drag & drop resume</h3>
+                            <p>PDF, DOC, TXT</p>
+                            <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.txt" hidden>
+                            <button class="btn-ios-outline"
+                                onclick="document.getElementById('resumeFileInput').click()">Browse</button>
+                            <div class="rdz-filename" id="resumeFileName" style="display:none;"></div>
+                        </div>
+                        <div class="form-divider"><span>or paste text</span></div>
+                        <textarea class="ios-textarea tall" id="resumePasteArea"
+                            placeholder="Paste your complete resume text here..."></textarea>
+                        <div class="parsed-preview ios-card" id="parsedPreview" style="display:none;">
+                            <h4>🧠 AI Extracted Data</h4>
+                            <div class="parsed-grid">
+                                <div class="parsed-sec">
+                                    <h5>💻 Skills</h5>
+                                    <div class="parsed-tags" id="parsedSkills"></div>
+                                </div>
+                                <div class="parsed-sec">
+                                    <h5>🛠️ Projects</h5>
+                                    <div id="parsedProjects"></div>
+                                </div>
+                                <div class="parsed-sec">
+                                    <h5>💼 Experience</h5>
+                                    <div id="parsedExperience"></div>
+                                </div>
+                                <div class="parsed-sec">
+                                    <h5>📜 Certifications</h5>
+                                    <div id="parsedCerts"></div>
+                                </div>
+                                <div class="parsed-sec">
+                                    <h5>🔧 Tools</h5>
+                                    <div class="parsed-tags" id="parsedTools"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wiz-nav">
+                        <button class="btn-ios-outline" onclick="wizPrev(2)">← Back</button>
+                        <button class="btn-ios-primary" onclick="parseResumeAndNext()">🧠 Parse & Continue →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Roles -->
+                <div class="wiz-step" id="wizStep3">
+                    <div class="wiz-step-head"><span class="wiz-emoji">🎯</span>
+                        <h2>Select Dream Roles</h2>
+                        <p>Choose up to 4 roles. AI analyzes fit for each.</p>
+                    </div>
+                    <div class="wiz-form">
+                        <div class="roles-grid" id="rolesGrid"></div>
+                        <div class="role-mismatch ios-card" id="roleMismatch" style="display:none;">
+                            <span class="rm-icon">⚠️</span>
+                            <div><strong>Role Mismatch Detected</strong>
+                                <p id="mismatchMsg"></p>
+                            </div>
+                        </div>
+                        <div class="roles-count-bar"><span><span id="roleCount">0</span>/4 selected</span></div>
+                    </div>
+                    <div class="wiz-nav">
+                        <button class="btn-ios-outline" onclick="wizPrev(3)">← Back</button>
+                        <button class="btn-ios-primary" onclick="wizNext(3)">Continue →</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Confidence -->
+                <div class="wiz-step" id="wizStep4">
+                    <div class="wiz-step-head"><span class="wiz-emoji">💪</span>
+                        <h2>Rate Your Confidence</h2>
+                        <p>Be honest — AI uses this for accurate scoring.</p>
+                    </div>
+                    <div class="wiz-form">
+                        <div class="confidence-list">
+                            <div class="ios-card conf-item">
+                                <div class="conf-label"><span>🧮</span> DSA</div>
+                                <div class="conf-slider-wrap"><input type="range" min="0" max="5" value="3"
+                                        class="ios-range" id="cDSA" oninput="updateConfVal(this,'cDSAv')"><span
+                                        class="conf-val" id="cDSAv">3</span></div>
+                            </div>
+                            <div class="ios-card conf-item">
+                                <div class="conf-label"><span>🖥️</span> Core CS</div>
+                                <div class="conf-slider-wrap"><input type="range" min="0" max="5" value="3"
+                                        class="ios-range" id="cCore" oninput="updateConfVal(this,'cCorev')"><span
+                                        class="conf-val" id="cCorev">3</span></div>
+                            </div>
+                            <div class="ios-card conf-item">
+                                <div class="conf-label"><span>⚙️</span> Frameworks</div>
+                                <div class="conf-slider-wrap"><input type="range" min="0" max="5" value="3"
+                                        class="ios-range" id="cFW" oninput="updateConfVal(this,'cFWv')"><span
+                                        class="conf-val" id="cFWv">3</span></div>
+                            </div>
+                            <div class="ios-card conf-item">
+                                <div class="conf-label"><span>🗣️</span> Communication</div>
+                                <div class="conf-slider-wrap"><input type="range" min="0" max="5" value="0"
+                                        class="ios-range" id="cComm" oninput="updateConfVal(this,'cCommv')"><span
+                                        class="conf-val" id="cCommv">0</span></div>
+                            </div>
+                            <div class="ios-card conf-item">
+                                <div class="conf-label"><span>🧠</span> Aptitude</div>
+                                <div class="conf-slider-wrap"><input type="range" min="0" max="5" value="3"
+                                        class="ios-range" id="cApt" oninput="updateConfVal(this,'cAptv')"><span
+                                        class="conf-val" id="cAptv">3</span></div>
+                            </div>
+                            <div class="ios-card conf-item">
+                                <div class="conf-label"><span>🚀</span> Projects</div>
+                                <div class="conf-slider-wrap"><input type="range" min="0" max="5" value="3"
+                                        class="ios-range" id="cProj" oninput="updateConfVal(this,'cProjv')"><span
+                                        class="conf-val" id="cProjv">3</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wiz-nav">
+                        <button class="btn-ios-outline" onclick="wizPrev(4)">← Back</button>
+                        <button class="btn-ios-primary" onclick="genQuestionsNext()">🧠 Generate Questions →</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Questions -->
+                <div class="wiz-step" id="wizStep5">
+                    <div class="wiz-step-head"><span class="wiz-emoji">🧠</span>
+                        <h2>AI-Generated Questions</h2>
+                        <p>Answer for better analysis. (Optional)</p>
+                    </div>
+                    <div class="wiz-form">
+                        <div id="questionsContainer">
+                            <div class="ai-loading-box" id="qLoading">
+                                <div class="ai-typing-indicator"><span></span><span></span><span></span></div>
+                                <p>AI generating questions...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wiz-nav">
+                        <button class="btn-ios-outline" onclick="wizPrev(5)">← Back</button>
+                        <button class="btn-ios-primary btn-accent" onclick="submitAnalysis()">🚀 Get AI Analysis
+                            →</button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="wiz-step" id="wizStepLoading" style="display:none;">
+                    <div class="analysis-loading-screen">
+                        <div class="als-ring">
+                            <div class="als-ring-inner"></div>
+                        </div>
+                        <h2>🧠 AI Analyzing Your Profile...</h2>
+                        <div class="als-steps">
+                            <div class="als-item active" id="as1"><span>⏳</span> Parsing resume data</div>
+                            <div class="als-item" id="as2"><span>○</span> Mapping skills to roles</div>
+                            <div class="als-item" id="as3"><span>○</span> Computing readiness scores</div>
+                            <div class="als-item" id="as4"><span>○</span> Generating AI roadmap</div>
+                            <div class="als-item" id="as5"><span>○</span> Building dashboard</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║      PAGE: RESUME READINESS (ATS)       ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-resume-readiness">
+        <section class="padded-section">
+            <div class="container container-md">
+                <div class="section-header-ios center">
+                    <h2>Resume Readiness & ATS Score</h2>
+                    <p>Comprehensive AI-powered ATS analysis.</p>
+                </div>
+                <div class="ats-full-layout">
+                    <div class="ios-card" style="padding:24px;">
+                        <div class="ats-drop" id="atsFullDrop">
+                            <span class="ats-drop-emoji">📄</span>
+                            <h3>Upload or Paste Resume</h3>
+                            <input type="file" id="atsFullFile" accept=".pdf,.doc,.docx,.txt" hidden>
+                            <button class="btn-ios-outline"
+                                onclick="document.getElementById('atsFullFile').click()">Browse</button>
+                            <textarea class="ios-textarea" id="atsFullPaste" placeholder="Or paste text..."></textarea>
+                            <div class="ios-form-group" style="margin-top:12px;"><label>Target Role</label>
+                                <select id="atsFullRole" class="ios-input">
+                                    <option value="">Select</option>
+                                    <option>Frontend Developer</option>
+                                    <option>Backend Developer</option>
+                                    <option>Full Stack Developer</option>
+                                    <option>AI Engineer</option>
+                                    <option>Data Scientist</option>
+                                    <option>Product Manager</option>
+                                    <option>UI/UX Designer</option>
+                                    <option>DevOps Engineer</option>
+                                    <option>Cybersecurity Analyst</option>
+                                    <option>Business Analyst</option>
+                                </select>
+                            </div>
+                            <button class="btn-ios-primary" onclick="runFullATS()">🧠 Full ATS Analysis</button>
+                        </div>
+                    </div>
+                    <div class="ios-card" id="atsFullResults" style="display:none;padding:24px;"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║        PAGE: RESUME BUILDER             ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-resume-builder">
+        <section class="padded-section">
+            <div class="container">
+                <div class="section-header-ios">
+                    <div class="shi-left"><span class="shi-dot"></span>
+                        <h2>AI Resume Builder</h2>
+                    </div>
+                    <p>Choose template, fill details with AI assistance, and download.</p>
+                </div>
+
+                <!-- Template Tabs -->
+                <div class="resume-tabs" id="resumeTabs">
+                    <button class="rtab active" onclick="filterResumeTemplates('free',this)">✨ Free Templates</button>
+                    <button class="rtab" onclick="filterResumeTemplates('premium',this)">👑 Premium</button>
+                    <button class="rtab" onclick="filterResumeTemplates('company',this)">🏢 Company-Specific</button>
+                </div>
+
+                <!-- Templates Grid -->
+                <div class="resume-templates-grid" id="resumeTemplatesGrid"></div>
+
+                <!-- Resume Editor (hidden until template selected) -->
+                <div class="resume-editor-section" id="resumeEditorSection" style="display:none;">
+                    <div class="resume-editor-layout">
+                        <div class="resume-form-side">
+                            <h3>📝 Fill Your Details</h3>
+
+                            <!-- Roles Selection for Resume -->
+                            <div class="ios-form-group">
+                                <label>🎯 Target Roles (up to 5)</label>
+                                <div class="rb-roles-selected" id="rbRolesSelected"></div>
+                                <select id="rbRoleSelect" class="ios-input" onchange="addResumeRole(this)">
+                                    <option value="">+ Add a role...</option>
+                                    <option>Frontend Developer</option>
+                                    <option>Backend Developer</option>
+                                    <option>Full Stack Developer</option>
+                                    <option>AI/ML Engineer</option>
+                                    <option>Data Scientist</option>
+                                    <option>Data Analyst</option>
+                                    <option>Product Manager</option>
+                                    <option>UI/UX Designer</option>
+                                    <option>DevOps Engineer</option>
+                                    <option>Cloud Engineer</option>
+                                    <option>Cybersecurity Analyst</option>
+                                    <option>Business Analyst</option>
+                                    <option>Mobile Developer</option>
+                                    <option>Game Developer</option>
+                                    <option>Blockchain Developer</option>
+                                    <option>QA Engineer</option>
+                                    <option>Technical Writer</option>
+                                    <option>Solutions Architect</option>
+                                    <option>Embedded Systems Engineer</option>
+                                </select>
+                                <!-- Custom Role -->
+                                <div class="rb-custom-role-row">
+                                    <input type="text" class="ios-input" id="rbCustomRole"
+                                        placeholder="Or type custom role...">
+                                    <button class="btn-ios-outline" onclick="addCustomResumeRole()">Add</button>
+                                </div>
+                            </div>
+
+                            <!-- AI Skill Suggestions based on roles -->
+                            <div class="ios-form-group">
+                                <label>💡 Skills
+                                    <button class="ai-inline-btn" onclick="suggestSkillsForRoles()">🧠 AI
+                                        Suggest</button>
+                                </label>
+                                <div class="rb-skill-suggestions" id="rbSkillSuggestions" style="display:none;"></div>
+                                <textarea class="ios-textarea" id="rbSkills"
+                                    placeholder="JavaScript, React, Node.js, SQL..."></textarea>
+                                <div class="rb-custom-skill-row">
+                                    <input type="text" class="ios-input" id="rbCustomSkill"
+                                        placeholder="Add custom skill...">
+                                    <button class="btn-ios-outline" onclick="addCustomSkill()">Add</button>
+                                </div>
+                            </div>
+
+                            <div class="ios-form-group">
+                                <label>Full Name</label>
+                                <input type="text" class="ios-input" id="rbName" placeholder="Your name">
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Email</label>
+                                <input type="email" class="ios-input" id="rbEmail" placeholder="you@email.com">
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Phone</label>
+                                <input type="tel" class="ios-input" id="rbPhone" placeholder="+91 XXXXX XXXXX">
+                            </div>
+                            <div class="ios-form-group">
+                                <label>LinkedIn</label>
+                                <input type="url" class="ios-input" id="rbLinkedIn"
+                                    placeholder="linkedin.com/in/username">
+                            </div>
+                            <div class="ios-form-group">
+                                <label>GitHub</label>
+                                <input type="url" class="ios-input" id="rbGitHub" placeholder="github.com/username">
+                            </div>
+
+                            <!-- Summary with AI Autofill -->
+                            <div class="ios-form-group">
+                                <label>Summary / Objective
+                                    <button class="ai-inline-btn" onclick="aiGenerateSummary()">🧠 AI Write</button>
+                                </label>
+                                <textarea class="ios-textarea" id="rbSummary"
+                                    placeholder="Click 'AI Write' to auto-generate based on your roles and skills..."></textarea>
+                            </div>
+
+                            <div class="ios-form-group">
+                                <label>Experience</label>
+                                <textarea class="ios-textarea tall" id="rbExperience"
+                                    placeholder="Company | Role | Duration&#10;• Achievement 1&#10;• Achievement 2"></textarea>
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Projects</label>
+                                <textarea class="ios-textarea tall" id="rbProjects"
+                                    placeholder="Project Name | Tech Stack&#10;• Description&#10;• Impact"></textarea>
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Education</label>
+                                <textarea class="ios-textarea" id="rbEducation"
+                                    placeholder="Degree | College | CGPA | Year"></textarea>
+                            </div>
+                            <div class="ios-form-group">
+                                <label>Certifications</label>
+                                <textarea class="ios-textarea" id="rbCerts"
+                                    placeholder="Certification 1&#10;Certification 2"></textarea>
+                            </div>
+
+                            <button class="btn-ios-primary btn-accent" onclick="updateResumePreview()"
+                                style="margin-top:8px;">👁️ Preview Resume</button>
+                        </div>
+                        <div class="resume-preview-side">
+                            <div class="resume-preview-actions">
+                                <button class="btn-ios-outline" onclick="downloadResumePDF()">📥 Download PDF</button>
+                                <button class="btn-ios-outline" onclick="downloadResumeHTML()">🌐 Download
+                                    HTML</button>
+                            </div>
+                            <div class="resume-preview-frame" id="resumePreviewFrame">
+                                <p style="color:#aaa;text-align:center;padding:60px;">Fill details and click Preview</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║        PAGE: PORTFOLIO BUILDER           ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-portfolio">
+        <section class="padded-section">
+            <div class="container">
+                <div class="section-header-ios">
+                    <div class="shi-left"><span class="shi-dot"></span>
+                        <h2>AI Portfolio Builder</h2>
+                    </div>
+                    <p>Create a stunning portfolio. Choose template, customize, download.</p>
+                </div>
+                <div class="portfolio-tabs" id="portfolioTabs">
+                    <button class="rtab active" onclick="filterPortfolioTemplates('free',this)">✨ Free</button>
+                    <button class="rtab" onclick="filterPortfolioTemplates('premium',this)">👑 Premium</button>
+                    <button class="rtab" onclick="filterPortfolioTemplates('company',this)">🏢 Company</button>
+                </div>
+                <div class="portfolio-templates-grid" id="portfolioTemplatesGrid"></div>
+                <div class="portfolio-editor" id="portfolioEditor" style="display:none;">
+                    <div class="ios-card" style="padding:28px;">
+                        <h3>🌐 Portfolio Editor</h3>
+                        <div class="ios-form-group"><label>Name</label><input class="ios-input" id="pfName"
+                                placeholder="Your Name"></div>
+                        <div class="ios-form-group"><label>Title</label><input class="ios-input" id="pfTitle"
+                                placeholder="Full Stack Developer"></div>
+                        <div class="ios-form-group"><label>Bio <button class="ai-inline-btn"
+                                    onclick="aiGeneratePortfolioBio()">🧠 AI Write</button></label><textarea
+                                class="ios-textarea" id="pfBio" placeholder="Short bio..."></textarea></div>
+                        <div class="ios-form-group"><label>Skills</label><input class="ios-input" id="pfSkills"
+                                placeholder="React, Node.js, Python..."></div>
+                        <div class="ios-form-group"><label>Projects (one per line)</label><textarea
+                                class="ios-textarea tall" id="pfProjects"
+                                placeholder="Project Name - Description"></textarea></div>
+                        <div class="ios-form-group"><label>GitHub</label><input class="ios-input" id="pfGitHub"
+                                placeholder="github.com/username"></div>
+                        <div class="ios-form-group"><label>LinkedIn</label><input class="ios-input" id="pfLinkedIn"
+                                placeholder="linkedin.com/in/username"></div>
+                        <div class="ios-form-group"><label>Email</label><input class="ios-input" id="pfEmail"
+                                placeholder="you@email.com"></div>
+                        <button class="btn-ios-primary btn-accent" onclick="downloadPortfolio()"
+                            style="margin-top:8px;">📥 Download Portfolio HTML</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║           PAGE: DASHBOARD               ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-dashboard">
+        <section class="padded-section">
+            <div class="container">
+                <div class="dash-head">
+                    <div>
+                        <h1 class="dash-title">Your Dashboard</h1>
+                        <p class="dash-sub" id="dashGreeting">Welcome! Complete analysis to see data.</p>
+                    </div>
+                    <div class="dash-head-actions">
+                        <button class="btn-ios-outline" onclick="exportPDF()">📥 Export PDF</button>
+                        <button class="btn-ios-primary" onclick="navigateTo('readiness')">🔄 Re-analyze</button>
+                    </div>
+                </div>
+                <div class="dash-empty ios-card" id="dashEmpty">
+                    <span class="de-emoji">📊</span>
+                    <h3>No Analysis Yet</h3>
+                    <p>Complete the Placement Readiness analysis to unlock your dashboard.</p>
+                    <button class="btn-ios-primary" onclick="navigateTo('readiness')">Start Analysis →</button>
+                </div>
+                <div id="dashContent" style="display:none;">
+                    <div class="dash-status-card ios-card" id="dashStatusCard">
+                        <div class="dsc-left"><span class="dsc-emoji" id="dscEmoji">🔥</span><span class="dsc-text"
+                                id="dscText">Analyzing...</span></div>
+                        <div class="dsc-right"><span class="dsc-score" id="dscScore">0</span><span
+                                class="dsc-label">Overall Readiness</span></div>
+                    </div>
+                    <div class="dash-score-grid" id="dashScoreGrid"></div>
+                    <div class="dash-charts">
+                        <div class="ios-card dash-chart-card">
+                            <h4>📊 Role Fit Radar</h4><canvas id="chartRadar"></canvas>
+                        </div>
+                        <div class="ios-card dash-chart-card">
+                            <h4>📈 Skill Distribution</h4><canvas id="chartPie"></canvas>
+                        </div>
+                        <div class="ios-card dash-chart-card">
+                            <h4>📉 Role Gap Analysis</h4><canvas id="chartBar"></canvas>
+                        </div>
+                    </div>
+                    <h3 class="dash-sec-title">🎯 Dream Role Analysis</h3>
+                    <div class="dash-role-cards" id="dashRoleCards"></div>
+                    <h3 class="dash-sec-title">🗺️ AI-Generated Roadmap</h3>
+                    <div class="dash-roadmap" id="dashRoadmap"></div>
+                    <div class="dash-actions-grid">
+                        <div class="ios-card dash-action-card">
+                            <h4>📋 Next Action</h4>
+                            <p id="dashNextAction">Complete analysis first.</p>
+                        </div>
+                        <div class="ios-card dash-action-card">
+                            <h4>🎯 Focus This Week</h4>
+                            <p id="dashFocus">AI will suggest after analysis.</p>
+                        </div>
+                        <div class="ios-card dash-action-card dash-action-wide">
+                            <h4>📅 7-Day Plan</h4>
+                            <div id="dashWeekPlan"></div>
+                        </div>
+                    </div>
+                    <div id="dashArenaSection" style="display:none;">
+                        <h3 class="dash-sec-title">🎮 Arena Progress</h3>
+                        <div class="dash-arena-grid" id="dashArenaGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║         PAGE: PRACTICE ARENA            ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-practice">
+        <section class="padded-section">
+            <div class="container">
+                <div class="arena-head">
+                    <div>
+                        <h1 class="arena-title">🎮 Practice Arena</h1>
+                        <p class="arena-sub">Level up with gamified AI challenges</p>
+                    </div>
+                    <div class="arena-chips">
+                        <div class="arena-chip"><span>🔥</span><span id="arenaStreak">0 Day Streak</span></div>
+                        <div class="arena-chip"><span>⚡</span><span id="arenaXP">0 XP</span></div>
+                        <div class="arena-chip"><span>🏆</span><span id="arenaLvl">Level 1</span></div>
+                    </div>
+                </div>
+
+                <!-- Streak Widget -->
+                <div class="ios-card streak-widget" id="streakWidget">
+                    <div class="sw-top">
+                        <div class="sw-flame">🔥</div>
+                        <div class="sw-info"><span class="sw-days" id="swDays">0</span><span class="sw-label">Day
+                                Streak</span></div>
+                        <div class="sw-xp-bar">
+                            <div class="sw-xp-nums"><span id="swXPCurrent">0</span><span id="swXPTotal">/ 1000</span>
+                            </div>
+                            <div class="sw-bar-track">
+                                <div class="sw-bar-fill" id="swBarFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sw-week" id="swWeek"></div>
+                </div>
+
+                <div id="arenaRoleSelect">
+                    <div class="section-header-ios center" style="margin-bottom:20px;">
+                        <h2>Choose Training Role</h2>
+                        <p>Select to begin</p>
+                    </div>
+                    <div class="arena-role-grid" id="arenaRoleGrid"></div>
+                </div>
+
+                <div id="arenaGameView" style="display:none;">
+                    <div class="arena-game-head">
+                        <button class="btn-ios-outline" onclick="backToArenaRoles()">← Roles</button>
+                        <div class="agh-role" id="aghRole"><span class="agh-icon">💻</span><span
+                                class="agh-name">Role</span></div>
+                        <div class="agh-stats"><span>⚡ <span id="aghXP">0</span> XP</span><span>❤️ <span
+                                    id="aghLives">5</span></span></div>
+                    </div>
+                    <div class="level-map" id="levelMap"></div>
+                    <div class="ios-card challenge-box" id="challengeBox" style="display:none;">
+                        <div class="cb-head"><span class="cb-type" id="cbType">Technical</span><span class="cb-timer"
+                                id="cbTimer">⏱ <span id="cbTimerNum">60</span>s</span></div>
+                        <div class="cb-question" id="cbQuestion"></div>
+                        <div class="cb-options" id="cbOptions"></div>
+                        <div class="cb-actions"><button class="btn-ios-outline"
+                                onclick="skipChallenge()">Skip</button><button class="btn-ios-primary" id="cbSubmitBtn"
+                                onclick="submitChallenge()">Submit</button></div>
+                        <div class="cb-result" id="cbResult" style="display:none;"></div>
+                    </div>
+                    <div class="arena-extras-grid">
+                        <div class="ios-card arena-extra"><span class="ae-icon">📋</span>
+                            <h4>Daily Challenge</h4>
+                            <p id="dailyText">Complete for bonus XP!</p><button class="btn-ios-primary"
+                                onclick="startDailyChallenge()">Start</button>
+                        </div>
+                        <div class="ios-card arena-extra"><span class="ae-icon">🏗️</span>
+                            <h4>Weekly Project</h4>
+                            <p id="weeklyText">Build a mini project for XP.</p><button class="btn-ios-outline"
+                                onclick="showWeeklyProject()">View</button>
+                        </div>
+                        <div class="ios-card arena-extra"><span class="ae-icon">🎙️</span>
+                            <h4>Mock Interview</h4>
+                            <p>AI interview simulation.</p><button class="btn-ios-outline"
+                                onclick="showToolToast('Mock Interview')">Soon</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║           PAGE: PROFILE                 ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-profile">
+        <section class="padded-section">
+            <div class="container container-sm">
+                <div class="ios-card profile-card-main">
+                    <div class="pcm-avatar">👤</div>
+                    <h2 id="profName">Student</h2>
+                    <p id="profDegree">Complete analysis to see profile</p>
+                    <div class="pcm-stats">
+                        <div class="pcm-stat"><span class="pcm-val" id="profScore">—</span><span
+                                class="pcm-label">Score</span></div>
+                        <div class="pcm-stat"><span class="pcm-val" id="profXP">0</span><span
+                                class="pcm-label">XP</span></div>
+                        <div class="pcm-stat"><span class="pcm-val" id="profStreak">0</span><span
+                                class="pcm-label">Streak</span></div>
+                        <div class="pcm-stat"><span class="pcm-val" id="profLvl">1</span><span
+                                class="pcm-label">Level</span></div>
+                    </div>
+                </div>
+                <div class="ios-card" style="padding:24px;margin-top:16px;">
+                    <h3>📊 Score History</h3>
+                    <div id="profHistory">
+                        <p style="color:var(--text-tertiary);text-align:center;padding:16px;">No history yet.</p>
+                    </div>
+                </div>
+                <div class="profile-btns">
+                    <button class="btn-ios-outline" onclick="exportPDF()">📥 Export Report</button>
+                    <button class="btn-ios-outline" style="color:var(--danger);" onclick="clearAllData()">🗑️ Clear
+                        Data</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║           PAGE: ABOUT                   ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-about">
+        <section class="padded-section">
+            <div class="container container-sm">
+                <div class="section-header-ios center">
+                    <h2>About Skore AI</h2>
+                </div>
+                <div class="legal-text">
+                    <p><strong>Skore AI</strong> is an AI-powered placement readiness platform helping students prepare
+                        for dream tech roles.</p>
+                    <h3>🚀 Our Mission</h3>
+                    <p>Democratize placement preparation with AI-driven career analysis, personalized roadmaps, and
+                        gamified learning.</p>
+                    <h3>🧠 AI Features</h3>
+                    <ul>
+                        <li><strong>Resume Parsing</strong> — AI extracts skills, projects, experience</li>
+                        <li><strong>Skill Mapping</strong> — Compare against 300+ companies</li>
+                        <li><strong>7-Metric Scoring</strong> — Honest AI-based evaluation</li>
+                        <li><strong>Roadmaps</strong> — 6-level personalized learning paths</li>
+                        <li><strong>Resume Builder</strong> — Free + Premium + Company-specific templates</li>
+                        <li><strong>Gamified Practice</strong> — XP, levels, streaks, challenges</li>
+                    </ul>
+                    <h3>📍 Location</h3>
+                    <p>Coimbatore, Tamil Nadu, India</p>
+                    <h3>📬 Contact</h3>
+                    <p>Email: <strong>skoreai@gmail.com</strong></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║           PAGE: CONTACT                 ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-contact">
+        <section class="padded-section">
+            <div class="container container-sm">
+                <div class="section-header-ios center">
+                    <h2>Contact Us</h2>
+                    <p>Questions or feedback? We'd love to hear from you.</p>
+                </div>
+                <div class="ios-card contact-card">
+                    <div class="contact-info-row">
+                        <div class="ci-item"><span>📧</span>
+                            <div><strong>Email</strong>
+                                <p>skoreai@gmail.com</p>
+                            </div>
+                        </div>
+                        <div class="ci-item"><span>📍</span>
+                            <div><strong>Location</strong>
+                                <p>Coimbatore, Tamil Nadu</p>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="contactForm" onsubmit="sendContactEmail(event)">
+                        <div class="ios-form-group"><label>Your Name</label><input type="text" class="ios-input"
+                                id="cfName" required placeholder="Full name"></div>
+                        <div class="ios-form-group"><label>Your Email</label><input type="email" class="ios-input"
+                                id="cfEmail" required placeholder="you@email.com"></div>
+                        <div class="ios-form-group"><label>Subject</label><input type="text" class="ios-input"
+                                id="cfSubject" required placeholder="What's this about?"></div>
+                        <div class="ios-form-group"><label>Message</label><textarea class="ios-textarea tall"
+                                id="cfMessage" required placeholder="Your message..."></textarea></div>
+                        <button type="submit" class="btn-ios-primary btn-accent" id="cfSubmitBtn">Send Message
+                            →</button>
+                        <p class="contact-note">Message will be sent to skoreai@gmail.com</p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║           PAGE: TERMS                   ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-terms">
+        <section class="padded-section">
+            <div class="container container-sm">
+                <div class="section-header-ios center">
+                    <h2>Terms and Conditions</h2>
+                    <p>Last updated: January 2025</p>
+                </div>
+                <div class="legal-text">
+                    <h3>1. Acceptance</h3>
+                    <p>By using Skore AI, you agree to these Terms.</p>
+                    <h3>2. Service</h3>
+                    <p>Skore AI provides: resume analysis, skill gap detection, readiness scoring, roadmaps, gamified
+                        practice, ATS checking, AI resume builder, portfolio builder, AI questions.</p>
+                    <h3>3. AI Content</h3>
+                    <p>All scores, suggestions, roadmaps are AI-generated guidance — not guarantees. Communication
+                        scores directly reflect your self-rated confidence.</p>
+                    <h3>4. Templates</h3>
+                    <p>Free templates: unrestricted personal use. Company-specific and Premium templates are premium
+                        features.</p>
+                    <h3>5. Data</h3>
+                    <p>Data processed per Privacy Policy. You own uploaded content.</p>
+                    <h3>6. Liability</h3>
+                    <p>Provided "as is" without warranties. Not liable for career decisions based on AI analysis.</p>
+                    <h3>7. Contact</h3>
+                    <p>skoreai@gmail.com | Coimbatore, Tamil Nadu</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║           PAGE: PRIVACY                 ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-privacy">
+        <section class="padded-section">
+            <div class="container container-sm">
+                <div class="section-header-ios center">
+                    <h2>Privacy Policy</h2>
+                    <p>Last updated: January 2025</p>
+                </div>
+                <div class="legal-text">
+                    <h3>1. Data Collected</h3>
+                    <ul>
+                        <li>Personal: name, degree, tier, CGPA, year</li>
+                        <li>Resume: skills, projects, experience</li>
+                        <li>Usage: pages, features, interactions</li>
+                        <li>Self-assessment: confidence ratings</li>
+                    </ul>
+                    <h3>2. Usage</h3>
+                    <p>Generate analysis, roadmaps, ATS scores, challenges, track progress, improve AI.</p>
+                    <h3>3. Storage</h3>
+                    <p>Browser localStorage. Resume processed in-memory.</p>
+                    <h3>4. Your Rights</h3>
+                    <p>Access, delete, export data. Opt out anytime.</p>
+                    <h3>5. Contact</h3>
+                    <p>skoreai@gmail.com | Coimbatore, Tamil Nadu</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- TOAST CONTAINER                            -->
+    <!-- ========================================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ========================================== -->
+    <!-- FOOTER                                     -->
+    <!-- ========================================== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand-col">
+                    <div class="footer-brand">
+                        <svg width="24" height="24">
+                            <use href="#skore-logo-sm" />
+                        </svg>
+                        <span class="fb-name">Skore</span>
+                        <span class="fb-badge">AI</span>
+                    </div>
+                    <p>AI-powered placement readiness platform.</p>
+                    <p style="margin-top:6px;font-size:11px;color:var(--text-tertiary);">📍 Coimbatore, Tamil Nadu,
+                        India</p>
+                    <div class="footer-socials">
+                        <a href="#">𝕏</a><a href="#">in</a><a href="mailto:skoreai@gmail.com">📧</a>
+                    </div>
+                </div>
+                <div class="footer-links-col">
+                    <h4>Platform</h4>
+                    <a href="#" onclick="navigateTo('home');return false;">Home</a>
+                    <a href="#" onclick="navigateTo('readiness');return false;">Readiness Score</a>
+                    <a href="#" onclick="navigateTo('practice');return false;">Practice Arena</a>
+                    <a href="#" onclick="navigateTo('dashboard');return false;">Dashboard</a>
+                </div>
+                <div class="footer-links-col">
+                    <h4>Tools</h4>
+                    <a href="#" onclick="navigateTo('resume-builder');return false;">Resume Builder</a>
+                    <a href="#" onclick="navigateTo('portfolio');return false;">Portfolio Builder</a>
+                    <a href="#" onclick="showToolToast('Roadmaps');return false;">Roadmaps</a>
+                    <a href="#" onclick="showToolToast('Interview Guide');return false;">Interview Guide</a>
+                </div>
+                <div class="footer-links-col">
+                    <h4>Company</h4>
+                    <a href="#" onclick="navigateTo('about');return false;">About</a>
+                    <a href="#" onclick="navigateTo('contact');return false;">Contact</a>
+                    <a href="#" onclick="navigateTo('terms');return false;">Terms</a>
+                    <a href="#" onclick="navigateTo('privacy');return false;">Privacy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 Skore AI. All rights reserved.</p>
+                <div class="fb-links"><a href="#" onclick="navigateTo('terms');return false;">Terms</a><a href="#"
+                        onclick="navigateTo('privacy');return false;">Privacy</a></div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';</script>
+    <script src="app.js?v=15"></script>
+    <script src="resume-builder.js?v=1"></script>
+</body>
+
+</html>

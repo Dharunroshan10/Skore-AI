@@ -1,0 +1,17 @@
+node_modules/
+.env
+*.log
+tmp/
+.vscode/
+.DS_Store
+*.pyc
+__pycache__/
+generate_pdf.py
+test.py
+test2.py
+test3.py
+test_ai.js
+test_file.py
+patch.py
+debug_ai_output.txt
+.gemini/
