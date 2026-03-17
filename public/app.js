@@ -195,13 +195,23 @@ function saveState() {
 // ============================
 // SECURE AI ROUTING
 // ============================
-async function callAI(prompt, onChunk, onDone, maxTokens) {
+
+// Helper: strip <think>...</think> blocks from AI output
+function stripThinkTags(text) {
+    if (!text) return text;
+    return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+}
+
+async function callAI(prompt, onChunk, onDone, maxTokens, systemMsg) {
     if(!APP.token) { showToast('Please login to use AI features', '🔒'); openAuthModal(); return; }
     try {
+        var bodyObj = { prompt: prompt, maxTokens: maxTokens || 2000, stream: true };
+        if (systemMsg) bodyObj.system = systemMsg;
+        
         const response = await fetch(BACKEND_URL + '/ai/call', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + APP.token, 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
-            body: JSON.stringify({ prompt, maxTokens: maxTokens || 1200, stream: true })
+            body: JSON.stringify(bodyObj)
         });
         if (!response.ok) {
             if (response.status === 401) { logout(); showToast('Session expired. Please log in again.', '🔒'); openAuthModal(); }
@@ -210,7 +220,7 @@ async function callAI(prompt, onChunk, onDone, maxTokens) {
         
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = '', fullText = '';
+        let buffer = '', fullText = '', insideThink = false;
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -224,31 +234,59 @@ async function callAI(prompt, onChunk, onDone, maxTokens) {
                     try {
                         const json = JSON.parse(trimmed.slice(6));
                         const content = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
-                        if (content) { fullText += content; if (onChunk) onChunk(content, fullText); }
+                        if (content) {
+                            fullText += content;
+                            // Strip think tags from streamed content for display
+                            var cleanFull = stripThinkTags(fullText);
+                            if (onChunk) onChunk(content, cleanFull);
+                        }
                     } catch (e) {}
                 }
             }
         }
+        fullText = stripThinkTags(fullText);
         if (onDone) onDone(fullText);
         return fullText;
     } catch (err) { console.error('AI Error:', err); if (onDone) onDone(null, err.message); return null; }
 }
 
-async function callAISimple(prompt, maxTokens) {
+async function callAISimple(prompt, maxTokens, systemMsg) {
     if(!APP.token) { showToast('Please login to use AI features', '🔒'); openAuthModal(); throw new Error('Not logged in'); }
     try {
+        var bodyObj = { prompt: prompt, maxTokens: maxTokens || 2000, stream: false };
+        if (systemMsg) bodyObj.system = systemMsg;
+        
         const response = await fetch(BACKEND_URL + '/ai/call', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + APP.token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, maxTokens: maxTokens || 2000, stream: false })
+            body: JSON.stringify(bodyObj)
         });
         if (!response.ok) {
             if (response.status === 401) { logout(); showToast('Session expired. Please log in again.', '🔒'); openAuthModal(); }
             throw new Error('API ' + response.status);
         }
         const data = await response.json();
-        return data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '';
+        var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content || '';
+        return stripThinkTags(content);
     } catch (err) { console.error('AI Simple Error:', err); return null; }
+}
+
+// Dedicated JSON AI call — uses /api/ai/json for reliable structured output
+async function callAIJSON(prompt, maxTokens) {
+    if(!APP.token) { showToast('Please login to use AI features', '🔒'); openAuthModal(); throw new Error('Not logged in'); }
+    var response = await fetch(BACKEND_URL + '/ai/json', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + APP.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt, maxTokens: maxTokens || 3000 })
+    });
+    if (!response.ok) {
+        if (response.status === 401) { logout(); showToast('Session expired.', '🔒'); openAuthModal(); }
+        var errData = await response.json().catch(function() { return {}; });
+        throw new Error(errData.error || 'API error ' + response.status);
+    }
+    var result = await response.json();
+    if (result.success && result.data) return result.data;
+    throw new Error(result.error || 'Invalid JSON from AI');
 }
 
 // ============================
@@ -875,30 +913,15 @@ function submitAnalysis() {
         '  "weekPlan": ["Mon: <task>", "Tue: <task>", "Wed: <task>", "Thu: <task>", "Fri: <task>", "Sat: <task>", "Sun: <task>"]\n' +
         '}';
 
-    // Call AI backend
-    callAISimple(prompt, 2000).then(function(text) {
-        if (stepLoading) stepLoading.style.display = 'none';
-        var aiData = null;
-        try {
-            var rawText = (text || '').trim();
-            // Try to extract JSON from markdown block first
-            var match = rawText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/i);
-            var cleaned = match ? match[1] : rawText;
-            
-            // If still not working, just grab everything between the first { and last }
-            if (!match) {
-                var startIdx = cleaned.indexOf('{');
-                var endIdx = cleaned.lastIndexOf('}');
-                if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-                    cleaned = cleaned.substring(startIdx, endIdx + 1);
-                }
-            }
-            aiData = JSON.parse(cleaned);
-        } catch(e) {
-            console.error('AI JSON parse error:', e, '\nRaw Text:', text);
-        }
+    // Call AI backend with retry (up to 2 attempts)
+    var attemptCount = 0;
+    var maxAttempts = 2;
 
-        if (aiData) {
+    function tryAIAnalysis() {
+        attemptCount++;
+        callAIJSON(prompt, 3000).then(function(aiData) {
+            if (stepLoading) stepLoading.style.display = 'none';
+
             // Force strict mathematical calculation for Overall score
             var r = Math.max(0, Math.min(100, aiData.resume || 0));
             var t = Math.max(0, Math.min(100, aiData.technical || 0));
@@ -928,21 +951,24 @@ function submitAnalysis() {
             };
             
             saveState();
-            showToast('AI Analysis complete!', '🧠');
+            showToast('AI Analysis complete! 🧠', '✅');
             navigateTo('dashboard');
-        } else {
-            // AI failed or returned garbage — don't silently fallback!
-            if (stepLoading) stepLoading.style.display = 'none';
-            showToast('AI Parse Error: Data was null! Please tell the dev.', '❌');
-            console.error("AI DATA WAS NULL. RAW TEXT:", text);
-        }
-    }).catch(function(err) {
-        console.error('AI call failed:', err);
-        if (stepLoading) stepLoading.style.display = 'none';
-        
-        // Show the exact error on screen instead of silently falling back!
-        showToast('API Error: ' + err.message + '. (Try logging out and logging back in!)', '⚠️');
-    });
+        }).catch(function(err) {
+            console.error('AI analysis attempt ' + attemptCount + ' failed:', err);
+            if (attemptCount < maxAttempts) {
+                showToast('Retrying AI analysis... (attempt ' + (attemptCount + 1) + ')', '🔄');
+                setTimeout(tryAIAnalysis, 1000);
+            } else {
+                if (stepLoading) stepLoading.style.display = 'none';
+                showToast('AI analysis failed after ' + maxAttempts + ' attempts. Error: ' + err.message, '❌');
+                // Reshow the wizard so user can try again
+                var step5 = document.getElementById('wizStep5');
+                if (step5) step5.classList.add('active');
+            }
+        });
+    }
+
+    tryAIAnalysis();
 }
 
 function buildFallbackAnalysis(name, degree, tier, cgpa, year, roles, resumeText, cDSA, cCore, cFW, cComm, cApt, cProj) {
@@ -981,7 +1007,176 @@ function buildFallbackAnalysis(name, degree, tier, cgpa, year, roles, resumeText
 }
 
 function exportPDF() { showToast('PDF export coming soon!', '📥'); }
-function startArenaChallenge() { showToast('Arena coming soon.', '🎮'); }
+
+// ============================
+// ARENA CHALLENGE — AI-POWERED MCQ QUIZ
+// ============================
+async function startArenaChallenge(roleId) {
+    if(!APP.token) { showToast('Please login to start a challenge!', '🔒'); openAuthModal(); return; }
+
+    var role = ROLES_DATA.find(function(r) { return r.id === roleId; });
+    if (!role) { showToast('Invalid role selected.', '⚠️'); return; }
+
+    APP.currentArenaRole = role;
+    APP.currentLevel = (APP.arenaData[roleId] && APP.arenaData[roleId].level) || 1;
+
+    // Navigate to challenge view
+    navigateTo('arena-challenge');
+
+    var challengeContainer = document.getElementById('arenaChallengeContent');
+    if (!challengeContainer) {
+        // Create the arena challenge page if it doesn't exist
+        var page = document.getElementById('page-arena-challenge');
+        if (!page) {
+            page = document.createElement('div');
+            page.className = 'page active';
+            page.id = 'page-arena-challenge';
+            document.getElementById('page-practice').parentNode.appendChild(page);
+        }
+        page.innerHTML = '<div class="page-content" style="max-width:700px;margin:0 auto;padding:20px;"><div id="arenaChallengeContent"></div></div>';
+        page.classList.add('active');
+        challengeContainer = document.getElementById('arenaChallengeContent');
+    }
+
+    challengeContainer.innerHTML = '<div class="ios-card" style="padding:30px;text-align:center;"><div class="ai-typing-indicator" style="justify-content:center;margin-bottom:12px;"><span></span><span></span><span></span></div><h3 style="margin-bottom:8px;">🧠 Generating Challenge</h3><p style="color:var(--text-secondary);font-size:13px;">AI is preparing ' + role.name + ' questions (Level ' + APP.currentLevel + ')...</p></div>';
+
+    var prompt = 'Generate exactly 5 multiple-choice questions for a "' + role.name + '" at difficulty level ' + APP.currentLevel + '/5. Skills to test: ' + role.skills.join(', ') + '.\n\n' +
+        'Return ONLY valid JSON with this structure:\n' +
+        '{"questions": [{"q": "question text", "options": ["A) ...", "B) ...", "C) ...", "D) ..."], "correct": 0, "explanation": "brief explanation"}]}\n\n' +
+        'Rules: correct is the 0-based index. Questions should be practical and specific, not trivial. Vary difficulty.';
+
+    try {
+        var data = await callAIJSON(prompt, 2000);
+        if (!data || !data.questions || data.questions.length === 0) {
+            challengeContainer.innerHTML = '<div class="ios-card" style="padding:30px;text-align:center;"><p style="color:red;">Failed to generate questions. <a href="#" onclick="startArenaChallenge(\'' + roleId + '\')">Try again</a></p></div>';
+            return;
+        }
+        renderArenaQuiz(data.questions, role, roleId);
+    } catch(err) {
+        console.error('Arena AI error:', err);
+        challengeContainer.innerHTML = '<div class="ios-card" style="padding:30px;text-align:center;"><p style="color:red;">AI Error: ' + err.message + '</p><button class="btn-ios-primary" style="margin-top:12px;" onclick="startArenaChallenge(\'' + roleId + '\')">Retry</button></div>';
+    }
+}
+
+function renderArenaQuiz(questions, role, roleId) {
+    var container = document.getElementById('arenaChallengeContent');
+    if (!container) return;
+
+    APP.arenaQuiz = { questions: questions, current: 0, score: 0, answers: [], roleId: roleId };
+    showArenaQuestion(0);
+}
+
+function showArenaQuestion(idx) {
+    var container = document.getElementById('arenaChallengeContent');
+    var quiz = APP.arenaQuiz;
+    if (!quiz || idx >= quiz.questions.length) { finishArenaQuiz(); return; }
+
+    var q = quiz.questions[idx];
+    var role = APP.currentArenaRole;
+    var progress = Math.round(((idx) / quiz.questions.length) * 100);
+
+    var html = '<div style="margin-bottom:16px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<span style="font-weight:800;font-size:14px;">' + role.icon + ' ' + role.name + ' • Level ' + APP.currentLevel + '</span>' +
+        '<span style="font-size:13px;color:var(--text-secondary);font-weight:600;">Q' + (idx + 1) + '/' + quiz.questions.length + '</span></div>' +
+        '<div style="height:6px;background:var(--gray-100);border-radius:99px;overflow:hidden;"><div style="width:' + progress + '%;height:100%;background:linear-gradient(90deg,#ff6b6b,#feca57);border-radius:99px;transition:width 0.3s;"></div></div></div>';
+
+    html += '<div class="ios-card" style="padding:24px;">';
+    html += '<h3 style="font-size:16px;font-weight:700;margin-bottom:18px;line-height:1.5;">' + q.q + '</h3>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+    q.options.forEach(function(opt, i) {
+        html += '<button class="arena-option-btn" id="arenaOpt' + i + '" onclick="selectArenaAnswer(' + idx + ',' + i + ')" ' +
+            'style="text-align:left;padding:14px 18px;border-radius:12px;border:2px solid var(--border-light);background:var(--bg-primary);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;">' +
+            opt + '</button>';
+    });
+    html += '</div></div>';
+
+    html += '<div id="arenaFeedback" style="display:none;margin-top:12px;"></div>';
+    html += '<button id="arenaNextBtn" style="display:none;margin-top:16px;width:100%;" class="btn-ios-primary" onclick="showArenaQuestion(' + (idx + 1) + ')">' +
+        (idx === quiz.questions.length - 1 ? '🏆 See Results' : 'Next Question →') + '</button>';
+
+    container.innerHTML = html;
+}
+
+function selectArenaAnswer(qIdx, optIdx) {
+    var quiz = APP.arenaQuiz;
+    if (!quiz || quiz.answers[qIdx] !== undefined) return; // Already answered
+
+    quiz.answers[qIdx] = optIdx;
+    var q = quiz.questions[qIdx];
+    var isCorrect = optIdx === q.correct;
+    if (isCorrect) quiz.score++;
+
+    // Highlight options
+    q.options.forEach(function(_, i) {
+        var btn = document.getElementById('arenaOpt' + i);
+        if (!btn) return;
+        btn.style.cursor = 'default';
+        btn.onclick = null;
+        if (i === q.correct) {
+            btn.style.borderColor = '#22c55e';
+            btn.style.background = 'rgba(34,197,94,0.1)';
+            btn.style.color = '#16a34a';
+        } else if (i === optIdx && !isCorrect) {
+            btn.style.borderColor = '#ef4444';
+            btn.style.background = 'rgba(239,68,68,0.1)';
+            btn.style.color = '#dc2626';
+        }
+    });
+
+    // Show feedback
+    var feedback = document.getElementById('arenaFeedback');
+    if (feedback) {
+        feedback.style.display = 'block';
+        feedback.innerHTML = '<div class="ios-card" style="padding:14px;background:' + (isCorrect ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)') + ';border:1px solid ' + (isCorrect ? '#22c55e' : '#ef4444') + ';">' +
+            '<div style="font-weight:800;margin-bottom:4px;">' + (isCorrect ? '✅ Correct!' : '❌ Incorrect') + '</div>' +
+            '<div style="font-size:13px;color:var(--text-secondary);">' + (q.explanation || '') + '</div></div>';
+    }
+
+    // Show next button
+    var nextBtn = document.getElementById('arenaNextBtn');
+    if (nextBtn) nextBtn.style.display = 'block';
+}
+
+function finishArenaQuiz() {
+    var quiz = APP.arenaQuiz;
+    if (!quiz) return;
+
+    var total = quiz.questions.length;
+    var score = quiz.score;
+    var pct = Math.round((score / total) * 100);
+    var xpEarned = score * 20;
+
+    // Update arena data
+    if (!APP.arenaData[quiz.roleId]) APP.arenaData[quiz.roleId] = { level: 1, bestScore: 0, totalXP: 0 };
+    var rd = APP.arenaData[quiz.roleId];
+    if (pct > rd.bestScore) rd.bestScore = pct;
+    rd.totalXP = (rd.totalXP || 0) + xpEarned;
+    if (pct >= 80 && rd.level < 5) rd.level++;
+
+    // Update global XP
+    APP.xp += xpEarned;
+    updateNavStats();
+    saveState();
+
+    var container = document.getElementById('arenaChallengeContent');
+    var grade = pct >= 90 ? 'S' : pct >= 80 ? 'A' : pct >= 60 ? 'B' : pct >= 40 ? 'C' : 'D';
+    var gradeColor = pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+    var role = APP.currentArenaRole;
+
+    container.innerHTML = '<div class="ios-card" style="padding:30px;text-align:center;">' +
+        '<div style="font-size:48px;margin-bottom:8px;">🏆</div>' +
+        '<h2 style="font-size:22px;font-weight:900;margin-bottom:6px;">Challenge Complete!</h2>' +
+        '<p style="color:var(--text-secondary);margin-bottom:20px;">' + role.icon + ' ' + role.name + ' • Level ' + APP.currentLevel + '</p>' +
+        '<div style="display:flex;justify-content:center;gap:30px;margin-bottom:24px;">' +
+        '<div><div style="font-size:36px;font-weight:900;color:' + gradeColor + ';">' + grade + '</div><div style="font-size:12px;color:var(--text-secondary);font-weight:600;">Grade</div></div>' +
+        '<div><div style="font-size:36px;font-weight:900;">' + score + '/' + total + '</div><div style="font-size:12px;color:var(--text-secondary);font-weight:600;">Score</div></div>' +
+        '<div><div style="font-size:36px;font-weight:900;color:#feca57;">+' + xpEarned + '</div><div style="font-size:12px;color:var(--text-secondary);font-weight:600;">XP Earned</div></div></div>' +
+        (pct >= 80 ? '<p style="color:#22c55e;font-weight:700;margin-bottom:16px;">🎉 Level Up! You advanced to Level ' + rd.level + '!</p>' : '') +
+        '<div style="display:flex;gap:10px;justify-content:center;">' +
+        '<button class="btn-ios-primary" onclick="startArenaChallenge(\'' + quiz.roleId + '\')">Play Again</button>' +
+        '<button class="btn-ios-secondary" onclick="navigateTo(\'practice\')">Back to Arena</button></div></div>';
+}
 
 // ============================
 // RESUME BUILDER LOGIC

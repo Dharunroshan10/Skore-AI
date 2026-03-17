@@ -373,15 +373,18 @@ async function aiEnhanceField(btnElement, fieldType) {
         btnElement.textContent = '⏳ Enhancing…';
         btnElement.style.pointerEvents = 'none';
 
-        var prompt = 'Act as an expert resume writer. Rewrite and strictly enhance this professional summary to be impactful, active, and ATS-friendly. Output ONLY the rewritten text, nothing else. Text: "' + text + '"';
+        var prompt = 'Rewrite and enhance this professional summary to be impactful, concise (2-3 sentences max), action-oriented, and ATS-friendly. Use strong verbs and quantify achievements where possible. Output ONLY the rewritten text, no quotes, no explanation:\n\n' + text;
+        var systemMsg = 'You are an elite resume writer with 15+ years of experience at top recruiting firms. You write concise, powerful resume content that passes ATS systems and impresses hiring managers. Output ONLY the improved text, never add explanations or formatting.';
 
         try {
-            var improved = await callAISimple(prompt, 500);
+            var improved = await callAISimple(prompt, 500, systemMsg);
             if (improved && inputEl) {
                 inputEl.value = improved.trim().replace(/^"|"$/g, '');
                 updateResumeDataFromUI();
                 updateResumePreview();
                 showToast('AI enhanced your summary!', '✨');
+            } else {
+                showToast('AI returned empty. Try again.', '⚠️');
             }
         } catch (e) { showToast('AI failed to enhance.', '❌'); }
         finally {
@@ -401,15 +404,18 @@ async function aiEnhanceField(btnElement, fieldType) {
         btnElement.textContent = '⏳ Enhancing…';
         btnElement.style.pointerEvents = 'none';
 
-        var prompt = 'Act as an expert resume writer. Improve these experience points for a "' + jobTitle + '" role. Make them action-oriented, result-focused, and professional. Format as plain text lines (no markdown bullets). Output ONLY the points. Text: "' + text + '"';
+        var prompt = 'Improve these job experience bullet points for a "' + jobTitle + '" role. Make each point:\n- Start with a strong action verb\n- Include measurable impact where possible\n- Be concise (1 line each)\n- Be ATS-optimized\n\nOutput ONLY the improved bullet points as plain text lines (no markdown bullets, no numbering). Original:\n\n' + text;
+        var systemMsg = 'You are an elite resume writer. Transform weak bullet points into powerful, results-driven achievements. Output ONLY the improved text lines, nothing else.';
 
         try {
-            var improved = await callAISimple(prompt, 800);
+            var improved = await callAISimple(prompt, 800, systemMsg);
             if (improved && descEl) {
-                descEl.value = improved.replace(/^- /gm, '').replace(/^\* /gm, '').trim();
+                descEl.value = improved.replace(/^- /gm, '').replace(/^\* /gm, '').replace(/^\d+\.\s*/gm, '').trim();
                 updateResumeDataFromUI();
                 updateResumePreview();
                 showToast('AI enhanced your experience!', '✨');
+            } else {
+                showToast('AI returned empty. Try again.', '⚠️');
             }
         } catch (e) { showToast('AI failed to enhance.', '❌'); }
         finally {
