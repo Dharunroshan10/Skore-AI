@@ -4931,15 +4931,24 @@ select.ios-input {
 }
 .template-modern .mod-photo { width: 100%; height: 100%; object-fit: cover; }
 .template-modern .mod-name { 
-    font-size: 24px; 
+    font-size: 16px; 
     font-weight: 900; 
-    line-height: 1.1; 
-    margin-bottom: 8px; 
+    line-height: 1.25; 
+    margin-bottom: 6px; 
     text-transform: uppercase; 
+    letter-spacing: 0.3px;
     word-break: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    hyphens: none;
 }
-.template-modern .mod-title { font-size: 13px; font-weight: 500; color: var(--resume-accent, #E8655A); text-transform: uppercase; letter-spacing: 1.2px; line-height: 1.4; }
+.template-modern .mod-title { 
+    font-size: clamp(10px, 1.5vw, 13px); 
+    font-weight: 500; 
+    color: var(--resume-accent, #E8655A); 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    line-height: 1.4; 
+}
 .template-modern .mod-contact-item { font-size: 12.5px; margin-bottom: 7px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; }
 .template-modern .mod-section-title {
     font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;

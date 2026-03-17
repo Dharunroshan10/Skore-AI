@@ -317,6 +317,23 @@ function updateResumePreview() {
     }
 
     sheet.innerHTML = html;
+
+    // Auto-fit name text to prevent overflow/clipping
+    requestAnimationFrame(function() {
+        var nameEls = sheet.querySelectorAll('.mod-name, .cre-name, .min-name');
+        nameEls.forEach(function(el) {
+            var parent = el.parentElement;
+            if (!parent) return;
+            var maxWidth = parent.clientWidth;
+            var fontSize = parseFloat(window.getComputedStyle(el).fontSize);
+            var minSize = 11;
+            // Shrink font until text fits or hits minimum
+            while (el.scrollWidth > maxWidth && fontSize > minSize) {
+                fontSize -= 0.5;
+                el.style.fontSize = fontSize + 'px';
+            }
+        });
+    });
 }
 
 /* ---------- PDF Download ---------- */
