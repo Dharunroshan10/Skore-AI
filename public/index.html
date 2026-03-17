@@ -127,6 +127,9 @@
                 <a href="#" class="nav-pill" data-page="resume-builder" onclick="navigateTo('resume-builder')">
                     <span class="pill-icon">📄</span><span class="pill-text">Resume</span>
                 </a>
+                <a href="#" class="nav-pill" data-page="roadmap" onclick="navigateTo('roadmap')">
+                    <span class="pill-icon">🗺️</span><span class="pill-text">Roadmap</span>
+                </a>
                 <a href="#" class="nav-pill" data-page="portfolio" onclick="navigateTo('portfolio')">
                     <span class="pill-icon">🌐</span><span class="pill-text">Portfolio</span>
                 </a>
@@ -162,6 +165,7 @@
             <a href="#" class="mm-link" onclick="navigateTo('dashboard');toggleMobileMenu()">📊 Dashboard</a>
             <a href="#" class="mm-link" onclick="navigateTo('practice');toggleMobileMenu()">🎮 Practice Arena</a>
             <a href="#" class="mm-link" onclick="navigateTo('resume-builder');toggleMobileMenu()">📄 Resume Builder</a>
+            <a href="#" class="mm-link" onclick="navigateTo('roadmap');toggleMobileMenu()">🗺️ Roadmap</a>
             <a href="#" class="mm-link" onclick="navigateTo('portfolio');toggleMobileMenu()">🌐 Portfolio</a>
             <a href="#" class="mm-link" onclick="navigateTo('readiness');toggleMobileMenu()">🎯 Readiness Score</a>
             <div class="mm-divider"></div>
@@ -412,7 +416,7 @@
                         <p class="tc-desc">Create stunning developer portfolios.</p>
                         <div class="tc-action">Create <span>→</span></div>
                     </div>
-                    <div class="ios-card tool-card" onclick="showToolToast('Roadmap Generator')">
+                    <div class="ios-card tool-card" onclick="navigateTo('roadmap')">
                         <div class="tc-icon">🗺️</div>
                         <h4 class="tc-title">Roadmap Generator</h4>
                         <p class="tc-desc">AI level-based learning paths.</p>
@@ -1573,6 +1577,63 @@
     <footer class="site-footer">
         <div class="container">
             <div class="footer-grid">
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║    PAGE: ROADMAP GENERATOR                  ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <main class="page" id="page-roadmap">
+        <section class="padded-section" style="min-height: 80vh;">
+            <div class="container container-md">
+                <div class="section-header-ios center">
+                    <h2>🗺️ AI Roadmap Generator</h2>
+                    <p>Enter your target role to generate a complete visual learning path.</p>
+                </div>
+
+                <div class="roadmap-setup" id="roadmapSetupView">
+                    <div class="ios-card" style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                        <div class="ios-form-group">
+                            <label style="font-size: 16px; font-weight: 600; text-align: center; display: block; margin-bottom: 20px;">What role are you aiming for?</label>
+                            <input type="text" class="ios-input" id="rmRoleInput" placeholder="e.g., Full Stack Developer, Data Scientist" style="font-size: 16px; padding: 14px; text-align: center;">
+                        </div>
+                        <div class="rm-roles-grid" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;">
+                            <div class="rm-role-chip" onclick="selectRmRole('Frontend Developer')">Frontend Developer</div>
+                            <div class="rm-role-chip" onclick="selectRmRole('Backend Developer')">Backend Developer</div>
+                            <div class="rm-role-chip" onclick="selectRmRole('AI Engineer')">AI Engineer</div>
+                            <div class="rm-role-chip" onclick="selectRmRole('Product Manager')">Product Manager</div>
+                            <div class="rm-role-chip" onclick="selectRmRole('Data Scientist')">Data Scientist</div>
+                            <div class="rm-role-chip" onclick="selectRmRole('UI/UX Designer')">UI/UX Designer</div>
+                        </div>
+                        <button class="btn-ios-primary" style="margin-top: 30px; width: 100%; font-size: 16px; padding: 14px;" onclick="generateRoadmap()">Generate AI Roadmap 🚀</button>
+                    </div>
+                </div>
+
+                <div class="roadmap-loading" id="roadmapLoadingView" style="display:none; text-align:center; padding: 60px 20px;">
+                    <div class="analysis-loading-screen" style="position: relative; background: transparent; height: auto;">
+                        <div class="als-ring" style="width: 80px; height: 80px;">
+                            <div class="als-ring-inner"></div>
+                        </div>
+                        <h2 style="font-size: 24px; margin-top: 30px;">🧠 Generating Roadmap...</h2>
+                        <p style="color: var(--text-secondary); margin-top: 10px;">Structuring learning blocks and resources for <span id="rmLoadingRole" style="font-weight: 700; color: var(--accent);"></span></p>
+                    </div>
+                </div>
+
+                <div class="roadmap-result" id="roadmapResultView" style="display:none; margin-top: 40px;">
+                    <button class="btn-ios-outline" style="margin-bottom: 30px;" onclick="resetRoadmap()">← Back to Roles</button>
+                    <h3 style="text-align: center; margin-bottom: 40px; font-size: 28px;">Roadmap: <span id="rmResultRole" style="color: var(--accent);"></span></h3>
+                    
+                    <div class="roadmap-tree-container" id="roadmapTreeContainer">
+                        <!-- JS injected nodes go here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ╔═════════════════════════════════════════╗ -->
+    <!-- ║                 FOOTER                    ║ -->
+    <!-- ╚═════════════════════════════════════════╝ -->
+    <footer>
+        <div class="container container-md">
+            <div class="footer-layout">
                 <div class="footer-brand-col">
                     <div class="footer-brand">
                         <svg width="24" height="24">
@@ -1599,7 +1660,7 @@
                     <h4>Tools</h4>
                     <a href="#" onclick="navigateTo('resume-builder');return false;">Resume Builder</a>
                     <a href="#" onclick="navigateTo('portfolio');return false;">Portfolio Builder</a>
-                    <a href="#" onclick="showToolToast('Roadmaps');return false;">Roadmaps</a>
+                    <a href="#" onclick="navigateTo('roadmap');return false;">Roadmaps</a>
                     <a href="#" onclick="showToolToast('Interview Guide');return false;">Interview Guide</a>
                 </div>
                 <div class="footer-links-col">

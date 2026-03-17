@@ -1229,3 +1229,104 @@ function useResumeTemplate(id) {
         showToast('Template editor unlocking soon!', '🛠️');
     }, 1500);
 }
+
+// ============================
+// AI ROADMAP GENERATOR LOGIC
+// ============================
+
+function selectRmRole(role) {
+    var input = document.getElementById('rmRoleInput');
+    if (input) input.value = role;
+    
+    // Highlight chip
+    document.querySelectorAll('.rm-role-chip').forEach(function(chip) {
+        chip.classList.toggle('selected', chip.textContent.trim() === role);
+    });
+}
+
+async function generateRoadmap() {
+    var input = document.getElementById('rmRoleInput');
+    var role = input ? input.value.trim() : '';
+    if (!role) return showToast('Please enter or select a role first', '⚠️');
+
+    // UI State: Loading
+    document.getElementById('roadmapSetupView').style.display = 'none';
+    document.getElementById('roadmapResultView').style.display = 'none';
+    document.getElementById('roadmapLoadingView').style.display = 'block';
+    
+    var roleSpan = document.getElementById('rmLoadingRole');
+    if (roleSpan) roleSpan.textContent = role;
+    
+    var resultSpan = document.getElementById('rmResultRole');
+    if (resultSpan) resultSpan.textContent = role;
+
+    var prompt = "Create a structured learning roadmap for the role: " + role + ". Output ONLY valid JSON in this format: { \"roadmap\": [ { \"phase\": \"Phase 1: Foundations\", \"title\": \"Web Basics\", \"desc\": \"Learn HTML, CSS, JavaScript\", \"topics\": [\"HTML5\", \"CSS3\", \"JS\"] } ] }";
+
+    try {
+        var data = await callAIJSON(prompt);
+        if (data && data.roadmap && Array.isArray(data.roadmap)) {
+            renderRoadmap(data.roadmap);
+        } else {
+            throw new Error('Invalid roadmap format received from AI');
+        }
+    } catch (err) {
+        console.error('Roadmap Generation Error:', err);
+        showToast('Failed to generate roadmap. Please try again.', '❌');
+        resetRoadmap();
+    }
+}
+
+function renderRoadmap(nodes) {
+    var container = document.getElementById('roadmapTreeContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    nodes.forEach(function(node, index) {
+        var html = '<div class="rm-node" id="rm-node-' + index + '">';
+        html += '<div class="rm-node-phase">' + (node.phase || 'Phase M') + '</div>';
+        html += '<div class="rm-node-title">' + (node.title || 'Topic') + '</div>';
+        html += '<div class="rm-node-desc">' + (node.desc || 'Learn core concepts here.') + '</div>';
+        
+        if (node.topics && Array.isArray(node.topics)) {
+            html += '<div class="rm-topics">';
+            node.topics.forEach(function(topic) {
+                html += '<span class="rm-topic-chip">' + topic + '</span>';
+            });
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        container.insertAdjacentHTML('beforeend', html);
+    });
+    
+    // UI State: Result
+    document.getElementById('roadmapLoadingView').style.display = 'none';
+    document.getElementById('roadmapResultView').style.display = 'block';
+    
+    // Trigger staggered entry animation
+    setTimeout(function() {
+        var nodeEls = container.querySelectorAll('.rm-node');
+        nodeEls.forEach(function(el, i) {
+            setTimeout(function() {
+                el.classList.add('visible');
+            }, i * 200); // 200ms stagger
+        });
+    }, 100);
+    
+    // Log progress/xp for completing generation
+    updateXP(50);
+}
+
+function resetRoadmap() {
+    document.getElementById('roadmapLoadingView').style.display = 'none';
+    document.getElementById('roadmapResultView').style.display = 'none';
+    document.getElementById('roadmapSetupView').style.display = 'block';
+    
+    var input = document.getElementById('rmRoleInput');
+    if (input) input.value = '';
+    
+    document.querySelectorAll('.rm-role-chip').forEach(function(chip) {
+        chip.classList.remove('selected');
+    });
+}
